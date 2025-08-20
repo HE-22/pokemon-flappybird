@@ -5,6 +5,7 @@ import {
     FLAGS,
     PHYSICS,
     BIRD,
+    SPEED,
 } from "./config.js";
 import { RNG, hashStringToSeed } from "./utils/rng.js";
 import { Bird } from "./physics.js";
@@ -35,6 +36,7 @@ const g = canvas.getContext("2d");
 const renderer = new Renderer(canvas);
 let skins = null;
 let currentSkinName = "evo1";
+let backgroundScrollOffset = 0;
 
 function fitCanvas() {
     const root = document.querySelector(".root");
@@ -159,6 +161,7 @@ function newRun(newSeed) {
     ui.hudScore.textContent = "0";
     accumulator = 0;
     animT = 0;
+    backgroundScrollOffset = 0; // Reset background scroll for new run
     currentSkinName = "evo1";
     renderer.currentBirdSkin = skins?.evo1 || null;
 }
@@ -314,8 +317,16 @@ function loop(now) {
         accumulator -= fixedDt;
     }
 
+    // Update background scroll offset during gameplay
+    if (state === State.Run) {
+        const gameSpeed = SPEED.base * SPEED.ramp(score);
+        backgroundScrollOffset += gameSpeed * fixedDt; // Scroll at game speed
+    } else if (state === State.Title) {
+        backgroundScrollOffset += SPEED.base * 0.3 * fixedDt; // Slower scroll during title screen
+    }
+
     // Render
-    renderer.clear();
+    renderer.clear(backgroundScrollOffset);
     if (state === State.Boot || state === State.Title) {
         // idle hover bird
         if (!bird) bird = new Bird(DESIGN_WIDTH * 0.28, DESIGN_HEIGHT * 0.45);

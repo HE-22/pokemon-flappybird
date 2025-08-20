@@ -56,6 +56,13 @@ export const HITBOX = {
     pipeInsetX: 8, // shrink pipe collision width to feel fair
 };
 
+// Optional vertical control for bottom pipe start position and safe margins
+export const PIPE_TUNING = {
+    bottomStartY: null, // number | null. If set, bottom pipe top edge starts at this Y
+    marginTop: 60,
+    marginBottom: 80,
+};
+
 export const INPUT = {
     bufferMs: 50,
 };

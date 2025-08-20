@@ -16,20 +16,24 @@ export class Renderer {
         this.highContrast = !!enabled;
     }
 
-    clear() {
+    clear(scrollOffsetX = 0) {
         const g = this.ctx;
         if (this.background?.bg) {
-            // Cover draw preserving aspect
             const img = this.background.bg;
+            // scale to cover height and tile horizontally
             const scale = Math.max(
-                DESIGN_WIDTH / img.width,
-                DESIGN_HEIGHT / img.height
+                DESIGN_HEIGHT / img.height,
+                DESIGN_WIDTH / img.width
             );
             const drawW = img.width * scale;
             const drawH = img.height * scale;
-            const dx = (DESIGN_WIDTH - drawW) / 2;
+            const tiles = Math.ceil(DESIGN_WIDTH / drawW) + 2;
+            let startX = -((scrollOffsetX % drawW) + drawW) % drawW - drawW;
             const dy = (DESIGN_HEIGHT - drawH) / 2;
-            g.drawImage(img, dx, dy, drawW, drawH);
+            for (let i = 0; i < tiles; i++) {
+                const dx = startX + i * drawW;
+                g.drawImage(img, dx, dy, drawW, drawH);
+            }
         } else {
             const grd = g.createLinearGradient(0, 0, 0, DESIGN_HEIGHT);
             grd.addColorStop(0, COLORS.daySkyTop);

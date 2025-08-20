@@ -6,6 +6,7 @@ import {
     DESIGN_HEIGHT,
     HITBOX,
     FLAGS,
+    PIPE_TUNING,
 } from "./config.js";
 import { aabbOverlap } from "./physics.js";
 
@@ -99,10 +100,18 @@ export class World {
     createNextPipe(x, score, birdHeight) {
         const gapSize = DIFFICULTY.gapAtScore(score, birdHeight);
         // Keep gap within screen margins
-        const margin = 80;
-        const minCenter = margin + gapSize / 2;
-        const maxCenter = DESIGN_HEIGHT - margin - gapSize / 2;
-        const centerY = this.rng.nextRange(minCenter, maxCenter);
+        const marginTop = PIPE_TUNING.marginTop ?? 60;
+        const marginBottom = PIPE_TUNING.marginBottom ?? 80;
+        const minCenter = marginTop + gapSize / 2;
+        const maxCenter = DESIGN_HEIGHT - marginBottom - gapSize / 2;
+        let centerY;
+        if (PIPE_TUNING.bottomStartY != null) {
+            // Force bottom pipe to start at a specific Y (its top edge)
+            const bottomY = Math.max(minCenter + gapSize / 2, Math.min(maxCenter + gapSize / 2, PIPE_TUNING.bottomStartY));
+            centerY = bottomY - gapSize / 2;
+        } else {
+            centerY = this.rng.nextRange(minCenter, maxCenter);
+        }
         const pipe = new PipePair(x, centerY, gapSize);
         if (FLAGS.DEBUG_MENU) {
             console.debug(

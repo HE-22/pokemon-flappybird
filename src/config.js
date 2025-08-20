@@ -23,12 +23,15 @@ export const SPEED = {
 
 // Pipe and difficulty tuning
 export const DIFFICULTY = {
-    initialGap: 180,
-    minGapByScore: 140, // by score 20
+    // Start easier, shrink gap more gradually at first, then faster later
+    initialGap: 200,
+    minGapByScore: 130, // target by difficultyTargetScore
+    difficultyTargetScore: 40,
     gapAtScore(score, birdHeight) {
-        // Linear interpolate from initialGap at score 0 to minGapByScore at score 20
-        const t = Math.min(1, Math.max(0, score / 20));
-        const raw = (1 - t) * this.initialGap + t * this.minGapByScore;
+        // Ease-in (quadratic): small change early, ramps later
+        const t = Math.min(1, Math.max(0, score / this.difficultyTargetScore));
+        const eased = t * t;
+        const raw = (1 - eased) * this.initialGap + eased * this.minGapByScore;
         // Guarantee fair gap: never below birdHeight * 3.5
         const fairMin = birdHeight * 3.5;
         return Math.max(raw, fairMin);
@@ -44,6 +47,13 @@ export const PIPE = {
 export const BIRD = {
     width: 48,
     height: 48,
+};
+
+// Collision hitbox tightening (in pixels)
+export const HITBOX = {
+    birdInsetX: 10, // shrink width by 10 px total (5 each side)
+    birdInsetY: 10, // shrink height by 10 px total
+    pipeInsetX: 8, // shrink pipe collision width to feel fair
 };
 
 export const INPUT = {

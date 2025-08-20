@@ -71,12 +71,61 @@ export class Renderer {
         const g = this.ctx;
         for (const p of pipes) {
             const { top, bottom } = p.getAABBs();
+            // Pipe bodies
             g.fillStyle = this.highContrast ? "#fff" : COLORS.pipe;
-            g.fillRect(top.x, top.y, PIPE.width, top.h);
-            g.fillRect(bottom.x, bottom.y, PIPE.width, bottom.h);
+            g.fillRect(top.x - 4, top.y, PIPE.width + 8, top.h); // slight outline pad
+            g.fillRect(bottom.x - 4, bottom.y, PIPE.width + 8, bottom.h);
+
+            // Pokémon-themed details: stripes and top caps resembling Pokéball motif
+            const capHeight = 20;
+            const stripeH = 6;
+            // Top cap
             g.fillStyle = this.highContrast ? "#000" : COLORS.pipeDark;
-            g.fillRect(top.x, top.h - 8, PIPE.width, 8);
-            g.fillRect(bottom.x, bottom.y, PIPE.width, 8);
+            g.fillRect(
+                top.x - 6,
+                top.h - capHeight,
+                PIPE.width + 12,
+                capHeight
+            );
+            // Bottom cap
+            g.fillRect(bottom.x - 6, bottom.y, PIPE.width + 12, capHeight);
+
+            // Red stripe near cap
+            g.fillStyle = "#ef4444";
+            g.fillRect(
+                top.x - 6,
+                top.h - capHeight - stripeH - 2,
+                PIPE.width + 12,
+                stripeH
+            );
+            g.fillRect(
+                bottom.x - 6,
+                bottom.y + capHeight + 2,
+                PIPE.width + 12,
+                stripeH
+            );
+
+            // Pokéball circle detail on caps
+            g.fillStyle = "#111827";
+            const circleR = 6;
+            g.beginPath();
+            g.arc(
+                top.x + PIPE.width / 2,
+                top.h - capHeight / 2,
+                circleR,
+                0,
+                Math.PI * 2
+            );
+            g.fill();
+            g.beginPath();
+            g.arc(
+                bottom.x + PIPE.width / 2,
+                bottom.y + capHeight / 2,
+                circleR,
+                0,
+                Math.PI * 2
+            );
+            g.fill();
         }
     }
 

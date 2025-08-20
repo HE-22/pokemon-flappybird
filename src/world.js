@@ -4,6 +4,7 @@ import {
     SPEED,
     DESIGN_WIDTH,
     DESIGN_HEIGHT,
+    HITBOX,
 } from "./config.js";
 import { aabbOverlap } from "./physics.js";
 
@@ -20,8 +21,18 @@ export class PipePair {
         const bottomY = this.gapCenterY + this.gapSize / 2;
         const bottomHeight = Math.max(0, DESIGN_HEIGHT - bottomY);
         return {
-            top: { x: this.x, y: 0, w: PIPE.width, h: topHeight },
-            bottom: { x: this.x, y: bottomY, w: PIPE.width, h: bottomHeight },
+            top: {
+                x: this.x + HITBOX.pipeInsetX * 0.5,
+                y: 0,
+                w: PIPE.width - HITBOX.pipeInsetX,
+                h: topHeight,
+            },
+            bottom: {
+                x: this.x + HITBOX.pipeInsetX * 0.5,
+                y: bottomY,
+                w: PIPE.width - HITBOX.pipeInsetX,
+                h: bottomHeight,
+            },
         };
     }
 }

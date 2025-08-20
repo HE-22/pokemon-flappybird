@@ -1,4 +1,4 @@
-import { PHYSICS, BIRD } from "./config.js";
+import { PHYSICS, BIRD, HITBOX } from "./config.js";
 
 export class Bird {
     constructor(x, y) {
@@ -23,7 +23,15 @@ export class Bird {
     }
 
     getAABB() {
-        return { x: this.x, y: this.y, w: this.width, h: this.height };
+        // Tighten hitbox
+        const insetX = HITBOX.birdInsetX;
+        const insetY = HITBOX.birdInsetY;
+        return {
+            x: this.x + insetX * 0.5,
+            y: this.y + insetY * 0.5,
+            w: this.width - insetX,
+            h: this.height - insetY,
+        };
     }
 }
 

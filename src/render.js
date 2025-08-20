@@ -28,7 +28,7 @@ export class Renderer {
             const drawW = img.width * scale;
             const drawH = img.height * scale;
             const tiles = Math.ceil(DESIGN_WIDTH / drawW) + 2;
-            let startX = -((scrollOffsetX % drawW) + drawW) % drawW - drawW;
+            let startX = (-((scrollOffsetX % drawW) + drawW) % drawW) - drawW;
             const dy = (DESIGN_HEIGHT - drawH) / 2;
             for (let i = 0; i < tiles; i++) {
                 const dx = startX + i * drawW;
@@ -205,7 +205,7 @@ export class Renderer {
         g.fillStyle = this.highContrast ? "#fff" : "#ffffff";
         g.strokeStyle = "#00000066";
         g.lineWidth = 6;
-        g.font = `bold ${size}px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial`;
+        g.font = `bold ${size}px 'PokemonClassic', monospace`;
         g.textAlign = "center";
         g.textBaseline = "middle";
         g.strokeText(text, DESIGN_WIDTH / 2, y);

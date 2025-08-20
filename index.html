@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+        <meta name="theme-color" content="#111111">
+        <title>Flappy Bird</title>
+        <style>
+      html, body { height: 100%; margin: 0; background: #0f172a; color: #e5e7eb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif; }
+      .root { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+      canvas { display: block; background: linear-gradient(#86c5f8, #bfe6ff); image-rendering: pixelated; image-rendering: crisp-edges; }
+      .ui { position: fixed; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+      .title, .gameover, .menu { position: absolute; pointer-events: auto; display: none; background: rgba(17,24,39,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; min-width: 240px; }
+      .title h1, .gameover h2 { margin: 0 0 8px 0; font-weight: 700; text-align: center; }
+      .btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+      button { pointer-events: auto; background: #22c55e; color: #0b0f19; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+      button.secondary { background: #94a3b8; color: #0b0f19; }
+      button.ghost { background: transparent; border: 1px solid #94a3b8; color: #e5e7eb; }
+      .hud { position: fixed; top: env(safe-area-inset-top, 12px); left: 0; right: 0; display: flex; justify-content: center; font-size: 32px; font-weight: 800; text-shadow: 0 2px 0 rgba(0,0,0,0.4); pointer-events: none; }
+      .sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 1px, 1px); white-space: nowrap; border: 0; }
+      .fps { position: fixed; bottom: 8px; left: 8px; font-size: 12px; opacity: 0.7; }
+    </style>
+    </head>
+    <body>
+        <div class="root">
+            <canvas id="game" width="540" height="960"
+                aria-label="Flappy Bird game canvas" role="img"></canvas>
+        </div>
+        <div class="ui" aria-live="polite">
+            <div class="hud" id="hudScore">0</div>
+
+            <div class="title" id="titlePanel" aria-modal="true" role="dialog">
+                <h1 id="titleText">Flappy Bird</h1>
+                <div
+                    style="text-align:center; margin: 6px 0 12px 0; opacity: .85;"
+                    id="subtitleText">Tap to Play</div>
+                <div class="btns">
+                    <button id="btnPlay">Play</button>
+                    <button id="btnSkins" class="secondary">Skins</button>
+                    <button id="btnLeaderboard"
+                        class="secondary">Leaderboard</button>
+                    <button id="btnSettings" class="ghost">Settings</button>
+                </div>
+            </div>
+
+            <div class="gameover" id="gameOverPanel" aria-modal="true"
+                role="dialog">
+                <h2 id="gameOverHeader">Game Over</h2>
+                <div style="text-align:center; margin-bottom: 12px;">
+                    <div id="finalScore">Score: 0</div>
+                    <div id="bestScore" style="opacity:.85">Best: 0</div>
+                    <div id="medalText" style="margin-top:6px"></div>
+                </div>
+                <div class="btns">
+                    <button id="btnRestart">Restart</button>
+                    <button id="btnShare" class="secondary">Share</button>
+                    <button id="btnHome" class="ghost">Home</button>
+                </div>
+            </div>
+
+            <div class="menu" id="settingsPanel" aria-modal="true"
+                role="dialog">
+                <h2 style="margin:0 0 8px 0">Settings</h2>
+                <label
+                    style="display:flex; align-items:center; gap:8px; margin:6px 0;">
+                    <input type="checkbox" id="toggleMusic"> Music
+                </label>
+                <label
+                    style="display:flex; align-items:center; gap:8px; margin:6px 0;">
+                    <input type="checkbox" id="toggleSfx" checked> SFX
+                </label>
+                <label
+                    style="display:flex; align-items:center; gap:8px; margin:6px 0;">
+                    <input type="checkbox" id="toggleHaptics" checked> Haptics
+                </label>
+                <label
+                    style="display:flex; align-items:center; gap:8px; margin:6px 0;">
+                    <input type="checkbox" id="toggleHighContrast"> High
+                    contrast UI
+                </label>
+                <div class="btns" style="margin-top:8px;">
+                    <button id="btnSettingsClose"
+                        class="secondary">Close</button>
+                </div>
+            </div>
+
+            <div class="fps" id="fpsOverlay" style="display:none">FPS: 60</div>
+        </div>
+
+        <script type="module" src="./src/main.js"></script>
+    </body>
+</html>

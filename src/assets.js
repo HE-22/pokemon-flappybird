@@ -3,7 +3,10 @@ export function loadImage(src) {
         const img = new Image();
         img.decoding = "async";
         img.onload = () => resolve(img);
-        img.onerror = reject;
+        img.onerror = (e) => {
+            console.error("[assets] failed to load image", src, e);
+            reject(e);
+        };
         img.src = src;
     });
 }
@@ -21,4 +24,10 @@ export async function preloadBirdSkins() {
 export async function preloadPipes() {
     const pipe = await loadImage("/assets/obs/pipe.png");
     return { pipe };
+}
+
+export async function preloadBackground() {
+    const bg = await loadImage("/assets/env/bg.png");
+    console.debug("[assets] background loaded", bg.width, bg.height);
+    return { bg };
 }

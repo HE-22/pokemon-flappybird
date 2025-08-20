@@ -23,10 +23,10 @@ export const SPEED = {
 
 // Pipe and difficulty tuning
 export const DIFFICULTY = {
-    // Start easier, shrink gap more gradually at first, then faster later
-    initialGap: 200,
-    minGapByScore: 130, // target by difficultyTargetScore
-    difficultyTargetScore: 40,
+    // Start easier and wider, shrink slowly
+    initialGap: 240,
+    minGapByScore: 160, // target by difficultyTargetScore
+    difficultyTargetScore: 70,
     gapAtScore(score, birdHeight) {
         // Ease-in (quadratic): small change early, ramps later
         const t = Math.min(1, Math.max(0, score / this.difficultyTargetScore));
@@ -36,8 +36,8 @@ export const DIFFICULTY = {
         const fairMin = birdHeight * 3.5;
         return Math.max(raw, fairMin);
     },
-    spacing: 260,
-    spacingJitter: 10, // ±10
+    spacing: 340,
+    spacingJitter: 6, // ±6 for more consistent posts
 };
 
 export const PIPE = {

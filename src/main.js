@@ -27,7 +27,7 @@ import {
     getSessionCount,
 } from "./storage.js";
 import { t, setLocale } from "./localization.js";
-import { preloadBirdSkins, preloadPipes } from "./assets.js";
+import { preloadBirdSkins, preloadPipes, preloadBackground } from "./assets.js";
 
 // Canvas scaling / letterboxing for portrait 9:16
 const canvas = document.getElementById("game");
@@ -336,12 +336,14 @@ function loop(now) {
 }
 
 // Boot → Title and preload assets
-Promise.all([preloadBirdSkins(), preloadPipes()])
-    .then(([loadedSkins, loadedPipes]) => {
+Promise.all([preloadBirdSkins(), preloadPipes(), preloadBackground()])
+    .then(([loadedSkins, loadedPipes, loadedBg]) => {
         skins = loadedSkins;
         renderer.birdSkins = skins;
         renderer.currentBirdSkin = skins.evo1;
         renderer.pipeSprites = loadedPipes;
+        renderer.background = loadedBg;
+        console.debug("[assets] bg ready", !!renderer.background?.bg);
     })
     .catch(() => {
         // proceed without assets

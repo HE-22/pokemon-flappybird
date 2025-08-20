@@ -5,6 +5,7 @@ import {
     DESIGN_WIDTH,
     DESIGN_HEIGHT,
     HITBOX,
+    FLAGS,
 } from "./config.js";
 import { aabbOverlap } from "./physics.js";
 
@@ -55,9 +56,21 @@ export class World {
 
     spawnIfNeeded(birdHeight) {
         if (this.pipes.length === 0) {
-            this.pipes.push(
-                this.createNextPipe(DESIGN_WIDTH * 0.75, 0, birdHeight)
+            const first = this.createNextPipe(
+                DESIGN_WIDTH * 0.75,
+                0,
+                birdHeight
             );
+            this.pipes.push(first);
+            if (FLAGS.DEBUG_MENU) {
+                console.debug(
+                    "[spawn:init] x=%d gap=%d centerY=%d count=%d",
+                    first.x,
+                    first.gapSize,
+                    first.gapCenterY,
+                    this.pipes.length
+                );
+            }
             return;
         }
         const last = this.pipes[this.pipes.length - 1];
@@ -67,7 +80,19 @@ export class World {
                 DIFFICULTY.spacingJitter
             );
             const nextX = last.x + DIFFICULTY.spacing + jitter;
-            this.pipes.push(this.createNextPipe(nextX, this.score, birdHeight));
+            const next = this.createNextPipe(nextX, this.score, birdHeight);
+            this.pipes.push(next);
+            if (FLAGS.DEBUG_MENU) {
+                console.debug(
+                    "[spawn] lastX=%d nextX=%d dx=%d gap=%d centerY=%d count=%d",
+                    last.x,
+                    next.x,
+                    (next.x - last.x).toFixed(1),
+                    next.gapSize,
+                    next.gapCenterY,
+                    this.pipes.length
+                );
+            }
         }
     }
 
@@ -78,7 +103,18 @@ export class World {
         const minCenter = margin + gapSize / 2;
         const maxCenter = DESIGN_HEIGHT - margin - gapSize / 2;
         const centerY = this.rng.nextRange(minCenter, maxCenter);
-        return new PipePair(x, centerY, gapSize);
+        const pipe = new PipePair(x, centerY, gapSize);
+        if (FLAGS.DEBUG_MENU) {
+            console.debug(
+                "[pipe] score=%d gap=%d centerY=%d spacing=%d±%d",
+                score,
+                gapSize,
+                centerY,
+                DIFFICULTY.spacing,
+                DIFFICULTY.spacingJitter
+            );
+        }
+        return pipe;
     }
 
     step(dt, score) {

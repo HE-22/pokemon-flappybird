@@ -4,10 +4,12 @@ export class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
+        this.ctx.imageSmoothingEnabled = false;
         this.highContrast = false;
         this.birdSkins = null; // {evo1, evo2, evo3}
         this.currentBirdSkin = null; // HTMLImageElement
         this.pipeSprites = null; // {pipe}
+        this.background = null; // {bg}
     }
 
     setHighContrast(enabled) {
@@ -16,11 +18,25 @@ export class Renderer {
 
     clear() {
         const g = this.ctx;
-        const grd = g.createLinearGradient(0, 0, 0, DESIGN_HEIGHT);
-        grd.addColorStop(0, COLORS.daySkyTop);
-        grd.addColorStop(1, COLORS.daySkyBottom);
-        g.fillStyle = grd;
-        g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.background?.bg) {
+            // Cover draw preserving aspect
+            const img = this.background.bg;
+            const scale = Math.max(
+                DESIGN_WIDTH / img.width,
+                DESIGN_HEIGHT / img.height
+            );
+            const drawW = img.width * scale;
+            const drawH = img.height * scale;
+            const dx = (DESIGN_WIDTH - drawW) / 2;
+            const dy = (DESIGN_HEIGHT - drawH) / 2;
+            g.drawImage(img, dx, dy, drawW, drawH);
+        } else {
+            const grd = g.createLinearGradient(0, 0, 0, DESIGN_HEIGHT);
+            grd.addColorStop(0, COLORS.daySkyTop);
+            grd.addColorStop(1, COLORS.daySkyBottom);
+            g.fillStyle = grd;
+            g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
     }
 
     drawGround() {
@@ -84,8 +100,8 @@ export class Renderer {
         const capSrcH = Math.floor(img.height * 0.5); // top half is cap area
         const bodySrcY = capSrcH;
         const bodySrcH = img.height - capSrcH; // lower half is the tileable body
-        const destCapH = Math.max(1, Math.floor(capSrcH * scale));
-        const destBodyUnitH = Math.max(1, Math.floor(bodySrcH * scale));
+        const destCapH = capSrcH * scale;
+        const destBodyUnitH = bodySrcH * scale;
 
         if (!flipY) {
             // Bottom pipe (upright)
@@ -96,50 +112,36 @@ export class Renderer {
                 0,
                 img.width,
                 capSrcH,
-                Math.round(x),
-                Math.round(y),
+                x,
+                y,
                 PIPE.width,
                 destCapH
             );
             // Fill remaining height with tiled body (clone of lower half)
             let drawn = destCapH;
-            while (drawn < height) {
+            const epsilon = 0.25; // slight overlap to hide seams
+            while (drawn < height - 1e-3) {
                 const remaining = height - drawn;
-                if (remaining >= destBodyUnitH) {
-                    g.drawImage(
-                        img,
-                        0,
-                        bodySrcY,
-                        img.width,
-                        bodySrcH,
-                        Math.round(x),
-                        Math.round(y + drawn),
-                        PIPE.width,
-                        destBodyUnitH
-                    );
-                    drawn += destBodyUnitH;
-                } else {
-                    // Partial tile: draw proportional slice of body
-                    const ratio = remaining / destBodyUnitH;
-                    const srcH = Math.max(1, Math.floor(bodySrcH * ratio));
-                    g.drawImage(
-                        img,
-                        0,
-                        bodySrcY,
-                        img.width,
-                        srcH,
-                        Math.round(x),
-                        Math.round(y + drawn),
-                        PIPE.width,
-                        remaining
-                    );
-                    drawn = height;
-                }
+                const dh = Math.min(destBodyUnitH, remaining);
+                const ratio = dh / destBodyUnitH;
+                const srcH = bodySrcH * ratio;
+                g.drawImage(
+                    img,
+                    0,
+                    bodySrcY,
+                    img.width,
+                    srcH,
+                    x,
+                    y + drawn - epsilon,
+                    PIPE.width,
+                    dh + epsilon
+                );
+                drawn += dh;
             }
         } else {
             // Top pipe (flipped vertically): draw in flipped space so math matches bottom case
             g.save();
-            g.translate(Math.round(x), Math.round(y + height));
+            g.translate(x, y + height);
             g.scale(1, -1);
             // Cap at the (visual) bottom after flip
             g.drawImage(
@@ -154,37 +156,24 @@ export class Renderer {
                 destCapH
             );
             let drawn = destCapH;
-            while (drawn < height) {
+            const epsilon = 0.25;
+            while (drawn < height - 1e-3) {
                 const remaining = height - drawn;
-                if (remaining >= destBodyUnitH) {
-                    g.drawImage(
-                        img,
-                        0,
-                        bodySrcY,
-                        img.width,
-                        bodySrcH,
-                        0,
-                        drawn,
-                        PIPE.width,
-                        destBodyUnitH
-                    );
-                    drawn += destBodyUnitH;
-                } else {
-                    const ratio = remaining / destBodyUnitH;
-                    const srcH = Math.max(1, Math.floor(bodySrcH * ratio));
-                    g.drawImage(
-                        img,
-                        0,
-                        bodySrcY,
-                        img.width,
-                        srcH,
-                        0,
-                        drawn,
-                        PIPE.width,
-                        remaining
-                    );
-                    drawn = height;
-                }
+                const dh = Math.min(destBodyUnitH, remaining);
+                const ratio = dh / destBodyUnitH;
+                const srcH = bodySrcH * ratio;
+                g.drawImage(
+                    img,
+                    0,
+                    bodySrcY,
+                    img.width,
+                    srcH,
+                    0,
+                    drawn - epsilon,
+                    PIPE.width,
+                    dh + epsilon
+                );
+                drawn += dh;
             }
             g.restore();
         }

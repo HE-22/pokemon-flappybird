@@ -4,6 +4,7 @@ import {
     SPEED,
     DESIGN_WIDTH,
     DESIGN_HEIGHT,
+    GROUND_LEVEL,
     HITBOX,
     FLAGS,
     PIPE_TUNING,
@@ -107,7 +108,10 @@ export class World {
         let centerY;
         if (PIPE_TUNING.bottomStartY != null) {
             // Force bottom pipe to start at a specific Y (its top edge)
-            const bottomY = Math.max(minCenter + gapSize / 2, Math.min(maxCenter + gapSize / 2, PIPE_TUNING.bottomStartY));
+            const bottomY = Math.max(
+                minCenter + gapSize / 2,
+                Math.min(maxCenter + gapSize / 2, PIPE_TUNING.bottomStartY)
+            );
             centerY = bottomY - gapSize / 2;
         } else {
             centerY = this.rng.nextRange(minCenter, maxCenter);
@@ -157,7 +161,7 @@ export class World {
         // Ground collision
         if (
             !ghostMode &&
-            (bird.y + bird.height >= DESIGN_HEIGHT || bird.y <= 0)
+            (bird.y + bird.height >= GROUND_LEVEL || bird.y <= 0) // Ground level based on background image
         ) {
             onHit?.();
             return true;

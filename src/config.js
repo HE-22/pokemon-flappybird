@@ -2,6 +2,7 @@
 
 export const DESIGN_WIDTH = 540; // 9:16 portrait design
 export const DESIGN_HEIGHT = 960;
+export const GROUND_LEVEL = 870; // Ground level based on background image
 
 // Physics constants (units are logical pixels)
 export const PHYSICS = {
@@ -58,7 +59,7 @@ export const HITBOX = {
 
 // Optional vertical control for bottom pipe start position and safe margins
 export const PIPE_TUNING = {
-    bottomStartY: null, // number | null. If set, bottom pipe top edge starts at this Y
+    bottomStartY: 800, // Bottom pipe top edge starts at ground level
     marginTop: 60,
     marginBottom: 80,
 };

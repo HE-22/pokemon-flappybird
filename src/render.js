@@ -44,9 +44,8 @@ export class Renderer {
     }
 
     drawGround() {
-        const g = this.ctx;
-        g.fillStyle = COLORS.ground;
-        g.fillRect(0, DESIGN_HEIGHT - 40, DESIGN_WIDTH, 40);
+        // Ground is now handled by the background image
+        // No need to draw a green rectangle
     }
 
     drawBird(bird, t = 0) {

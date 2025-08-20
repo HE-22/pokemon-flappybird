@@ -1,6 +1,7 @@
 import {
     DESIGN_WIDTH,
     DESIGN_HEIGHT,
+    GROUND_LEVEL,
     INPUT,
     FLAGS,
     PHYSICS,
@@ -305,8 +306,9 @@ function loop(now) {
         } else if (state === State.Dying) {
             // Continue falling each fixed step until ground
             bird.step(fixedDt);
-            if (bird.y + bird.height >= DESIGN_HEIGHT - 40) {
-                bird.y = DESIGN_HEIGHT - 40 - bird.height;
+            if (bird.y + bird.height >= GROUND_LEVEL) {
+                // Ground level based on background image
+                bird.y = GROUND_LEVEL - bird.height;
                 setHighScore(score);
                 ui.finalScore.textContent = `${t("score")}: ${score}`;
                 ui.bestScore.textContent = `${t("best")}: ${getHighScore()}`;

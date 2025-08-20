@@ -4,6 +4,8 @@ let audioCtx = null;
 let musicGain = null;
 let sfxGain = null;
 let duckTimeout = null;
+let musicEl = null;
+let musicSource = null;
 
 function ensureCtx() {
     if (!audioCtx) {
@@ -67,6 +69,24 @@ export const SFX = {
         playBeep(180, 200, "sawtooth");
         duckMusic(150, -3);
     },
+    death() {
+        // Descending chirp
+        if (!getSettings().sfx) return;
+        ensureCtx();
+        const now = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "sawtooth";
+        o.frequency.setValueAtTime(600, now);
+        o.frequency.exponentialRampToValueAtTime(120, now + 0.35);
+        g.gain.value = 0.0001;
+        g.gain.exponentialRampToValueAtTime(0.4, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+        o.connect(g);
+        g.connect(sfxGain);
+        o.start(now);
+        o.stop(now + 0.4);
+    },
     medal() {
         playBeep(1200, 250, "sine");
     },
@@ -74,3 +94,38 @@ export const SFX = {
         playBeep(500, 50, "triangle");
     },
 };
+
+async function ensureMusic() {
+    ensureCtx();
+    if (!musicEl) {
+        musicEl = new Audio("/assets/audio/music.mp3");
+        musicEl.loop = true;
+        musicEl.preload = "auto";
+        try {
+            musicSource = audioCtx.createMediaElementSource(musicEl);
+            musicSource.connect(musicGain);
+        } catch {
+            // Some browsers disallow multiple connections of the same source; ignore if already connected
+        }
+    }
+}
+
+export async function playMusic() {
+    if (!getSettings().music) return;
+    await ensureMusic();
+    applySettings();
+    try {
+        await musicEl.play();
+    } catch {
+        // user gesture may be required; will resume on next input
+    }
+}
+
+export function stopMusic() {
+    if (musicEl) {
+        musicEl.pause();
+        try {
+            musicEl.currentTime = 0;
+        } catch {}
+    }
+}

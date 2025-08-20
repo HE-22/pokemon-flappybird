@@ -7,6 +7,7 @@ export class Renderer {
         this.highContrast = false;
         this.birdSkins = null; // {evo1, evo2, evo3}
         this.currentBirdSkin = null; // HTMLImageElement
+        this.pipeSprites = null; // {pipe}
     }
 
     setHighContrast(enabled) {
@@ -34,7 +35,16 @@ export class Renderer {
         g.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
         g.rotate(Math.max(-0.5, Math.min(0.6, bird.vy / 600)));
         if (this.currentBirdSkin) {
-            const img = this.currentBirdSkin;
+            let img = this.currentBirdSkin;
+            // For evo1 only: use up-frame when flapping upward
+            if (
+                this.birdSkins &&
+                img === this.birdSkins.evo1 &&
+                bird.vy < 0 &&
+                this.birdSkins.evo1_up
+            ) {
+                img = this.birdSkins.evo1_up;
+            }
             const scaleX = BIRD.width / img.width;
             const scaleY = BIRD.height / img.height;
             const scale = Math.min(scaleX, scaleY);
@@ -67,65 +77,133 @@ export class Renderer {
         g.restore();
     }
 
+    // Draw a pipe with a single cap and a tiled body (clone lower half only), preserving aspect ratio
+    _drawPipeTiled(img, x, y, height, flipY = false) {
+        const g = this.ctx;
+        const scale = PIPE.width / img.width; // uniform scale to keep pixels square
+        const capSrcH = Math.floor(img.height * 0.5); // top half is cap area
+        const bodySrcY = capSrcH;
+        const bodySrcH = img.height - capSrcH; // lower half is the tileable body
+        const destCapH = Math.max(1, Math.floor(capSrcH * scale));
+        const destBodyUnitH = Math.max(1, Math.floor(bodySrcH * scale));
+
+        if (!flipY) {
+            // Bottom pipe (upright)
+            // Draw cap once at the top
+            g.drawImage(
+                img,
+                0,
+                0,
+                img.width,
+                capSrcH,
+                Math.round(x),
+                Math.round(y),
+                PIPE.width,
+                destCapH
+            );
+            // Fill remaining height with tiled body (clone of lower half)
+            let drawn = destCapH;
+            while (drawn < height) {
+                const remaining = height - drawn;
+                if (remaining >= destBodyUnitH) {
+                    g.drawImage(
+                        img,
+                        0,
+                        bodySrcY,
+                        img.width,
+                        bodySrcH,
+                        Math.round(x),
+                        Math.round(y + drawn),
+                        PIPE.width,
+                        destBodyUnitH
+                    );
+                    drawn += destBodyUnitH;
+                } else {
+                    // Partial tile: draw proportional slice of body
+                    const ratio = remaining / destBodyUnitH;
+                    const srcH = Math.max(1, Math.floor(bodySrcH * ratio));
+                    g.drawImage(
+                        img,
+                        0,
+                        bodySrcY,
+                        img.width,
+                        srcH,
+                        Math.round(x),
+                        Math.round(y + drawn),
+                        PIPE.width,
+                        remaining
+                    );
+                    drawn = height;
+                }
+            }
+        } else {
+            // Top pipe (flipped vertically): draw in flipped space so math matches bottom case
+            g.save();
+            g.translate(Math.round(x), Math.round(y + height));
+            g.scale(1, -1);
+            // Cap at the (visual) bottom after flip
+            g.drawImage(
+                img,
+                0,
+                0,
+                img.width,
+                capSrcH,
+                0,
+                0,
+                PIPE.width,
+                destCapH
+            );
+            let drawn = destCapH;
+            while (drawn < height) {
+                const remaining = height - drawn;
+                if (remaining >= destBodyUnitH) {
+                    g.drawImage(
+                        img,
+                        0,
+                        bodySrcY,
+                        img.width,
+                        bodySrcH,
+                        0,
+                        drawn,
+                        PIPE.width,
+                        destBodyUnitH
+                    );
+                    drawn += destBodyUnitH;
+                } else {
+                    const ratio = remaining / destBodyUnitH;
+                    const srcH = Math.max(1, Math.floor(bodySrcH * ratio));
+                    g.drawImage(
+                        img,
+                        0,
+                        bodySrcY,
+                        img.width,
+                        srcH,
+                        0,
+                        drawn,
+                        PIPE.width,
+                        remaining
+                    );
+                    drawn = height;
+                }
+            }
+            g.restore();
+        }
+    }
+
     drawPipes(pipes) {
         const g = this.ctx;
         for (const p of pipes) {
             const { top, bottom } = p.getAABBs();
-            // Pipe bodies
-            g.fillStyle = this.highContrast ? "#fff" : COLORS.pipe;
-            g.fillRect(top.x - 4, top.y, PIPE.width + 8, top.h); // slight outline pad
-            g.fillRect(bottom.x - 4, bottom.y, PIPE.width + 8, bottom.h);
-
-            // Pokémon-themed details: stripes and top caps resembling Pokéball motif
-            const capHeight = 20;
-            const stripeH = 6;
-            // Top cap
-            g.fillStyle = this.highContrast ? "#000" : COLORS.pipeDark;
-            g.fillRect(
-                top.x - 6,
-                top.h - capHeight,
-                PIPE.width + 12,
-                capHeight
-            );
-            // Bottom cap
-            g.fillRect(bottom.x - 6, bottom.y, PIPE.width + 12, capHeight);
-
-            // Red stripe near cap
-            g.fillStyle = "#ef4444";
-            g.fillRect(
-                top.x - 6,
-                top.h - capHeight - stripeH - 2,
-                PIPE.width + 12,
-                stripeH
-            );
-            g.fillRect(
-                bottom.x - 6,
-                bottom.y + capHeight + 2,
-                PIPE.width + 12,
-                stripeH
-            );
-
-            // Pokéball circle detail on caps
-            g.fillStyle = "#111827";
-            const circleR = 6;
-            g.beginPath();
-            g.arc(
-                top.x + PIPE.width / 2,
-                top.h - capHeight / 2,
-                circleR,
-                0,
-                Math.PI * 2
-            );
-            g.fill();
-            g.beginPath();
-            g.arc(
-                bottom.x + PIPE.width / 2,
-                bottom.y + capHeight / 2,
-                circleR,
-                0,
-                Math.PI * 2
-            );
-            g.fill();
+            if (this.pipeSprites?.pipe) {
+                const img = this.pipeSprites.pipe;
+                this._drawPipeTiled(img, bottom.x, bottom.y, bottom.h, false);
+                this._drawPipeTiled(img, top.x, top.y, top.h, true);
+            } else {
+                // vector fallback
+                g.fillStyle = this.highContrast ? "#fff" : COLORS.pipe;
+                g.fillRect(top.x - 4, top.y, PIPE.width + 8, top.h);
+                g.fillRect(bottom.x - 4, bottom.y, PIPE.width + 8, bottom.h);
+            }
         }
     }
 

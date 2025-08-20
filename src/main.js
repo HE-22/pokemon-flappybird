@@ -10,7 +10,13 @@ import { RNG, hashStringToSeed } from "./utils/rng.js";
 import { Bird } from "./physics.js";
 import { World } from "./world.js";
 import { Renderer } from "./render.js";
-import { SFX, resumeAudio, applySettings } from "./audio.js";
+import {
+    SFX,
+    resumeAudio,
+    applySettings,
+    playMusic,
+    stopMusic,
+} from "./audio.js";
 import { tapLight, hitHeavy } from "./haptics.js";
 import {
     getHighScore,
@@ -21,7 +27,7 @@ import {
     getSessionCount,
 } from "./storage.js";
 import { t, setLocale } from "./localization.js";
-import { preloadBirdSkins } from "./assets.js";
+import { preloadBirdSkins, preloadPipes } from "./assets.js";
 
 // Canvas scaling / letterboxing for portrait 9:16
 const canvas = document.getElementById("game");
@@ -121,7 +127,7 @@ ui.toggleHighContrast.addEventListener("change", () => {
 });
 
 // Game state
-const State = { Boot: 0, Title: 1, Run: 2, GameOver: 3 };
+const State = { Boot: 0, Title: 1, Run: 2, Dying: 3, GameOver: 4 };
 let state = State.Boot;
 let seed = 0;
 let rng = null;
@@ -220,6 +226,7 @@ function startRun() {
     newRun(runSeed);
     setState(State.Run);
     resumeAudio();
+    playMusic();
 }
 
 // Session count for ad gating, analytics stub
@@ -285,13 +292,23 @@ function loop(now) {
             );
             if (hit) {
                 SFX.hit();
+                SFX.death();
                 hitHeavy();
-                setState(State.GameOver);
+                // Nose dive: set vertical velocity downwards and small forward tilt via vy
+                bird.vy = Math.max(bird.vy, 400);
+                setState(State.Dying);
+                stopMusic();
+            }
+        } else if (state === State.Dying) {
+            // Continue falling each fixed step until ground
+            bird.step(fixedDt);
+            if (bird.y + bird.height >= DESIGN_HEIGHT - 40) {
+                bird.y = DESIGN_HEIGHT - 40 - bird.height;
                 setHighScore(score);
                 ui.finalScore.textContent = `${t("score")}: ${score}`;
                 ui.bestScore.textContent = `${t("best")}: ${getHighScore()}`;
                 ui.medalText.textContent = computeMedalText(score);
-                break; // stop physics accumulation on death frame
+                setState(State.GameOver);
             }
         }
         accumulator -= fixedDt;
@@ -305,7 +322,11 @@ function loop(now) {
         bird.y = DESIGN_HEIGHT * 0.45 + Math.sin(now / 400) * 6;
         renderer.drawBird(bird, animT);
         renderer.drawGround();
-    } else if (state === State.Run || state === State.GameOver) {
+    } else if (
+        state === State.Run ||
+        state === State.Dying ||
+        state === State.GameOver
+    ) {
         renderer.drawPipes(world.pipes);
         renderer.drawBird(bird, animT);
         renderer.drawGround();
@@ -314,15 +335,16 @@ function loop(now) {
     requestAnimationFrame(loop);
 }
 
-// Boot → Title
-preloadBirdSkins()
-    .then((loaded) => {
-        skins = loaded;
+// Boot → Title and preload assets
+Promise.all([preloadBirdSkins(), preloadPipes()])
+    .then(([loadedSkins, loadedPipes]) => {
+        skins = loadedSkins;
         renderer.birdSkins = skins;
         renderer.currentBirdSkin = skins.evo1;
+        renderer.pipeSprites = loadedPipes;
     })
     .catch(() => {
-        // proceed without skins
+        // proceed without assets
     })
     .finally(() => {
         setState(State.Title);

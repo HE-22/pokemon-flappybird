@@ -15,7 +15,7 @@ export function setHighScore(score) {
 }
 
 const defaultSettings = {
-    music: false,
+    music: true,
     sfx: true,
     haptics: true,
     highContrast: false,

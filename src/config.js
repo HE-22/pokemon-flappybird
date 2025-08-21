@@ -38,7 +38,7 @@ export const DIFFICULTY = {
         return Math.max(raw, fairMin);
     },
     spacing: 340,
-    spacingJitter: 6, // ±6 for more consistent posts
+    spacingJitter: 20, // ±20 for more varied pipe spacing
 };
 
 export const PIPE = {
@@ -59,7 +59,7 @@ export const HITBOX = {
 
 // Optional vertical control for bottom pipe start position and safe margins
 export const PIPE_TUNING = {
-    bottomStartY: 800, // Bottom pipe top edge starts at ground level
+    // bottomStartY: 800, // Removed fixed positioning for more variation
     marginTop: 60,
     marginBottom: 80,
 };

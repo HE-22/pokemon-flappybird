@@ -93,6 +93,16 @@ export const SFX = {
     ui() {
         playBeep(500, 50, "triangle");
     },
+    evolve() {
+        if (!getSettings().sfx) return;
+        ensureCtx();
+        const evolveAudio = new Audio("/assets/audio/evolve.mp3");
+        const source = audioCtx.createMediaElementSource(evolveAudio);
+        source.connect(sfxGain);
+        evolveAudio.play().catch(() => {
+            // Fallback if audio fails to play
+        });
+    },
 };
 
 async function ensureMusic() {

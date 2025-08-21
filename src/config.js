@@ -38,11 +38,11 @@ export const DIFFICULTY = {
         return Math.max(raw, fairMin);
     },
     spacing: 340,
-    spacingJitter: 20, // ±20 for more varied pipe spacing
+    spacingJitter: 6, // ±6 for more consistent posts
 };
 
 export const PIPE = {
-    width: 64,
+    width: 80, // Increased from 64 to make pipes thicker
 };
 
 export const BIRD = {
@@ -59,9 +59,9 @@ export const HITBOX = {
 
 // Optional vertical control for bottom pipe start position and safe margins
 export const PIPE_TUNING = {
-    // bottomStartY: 800, // Removed fixed positioning for more variation
+    // bottomStartY: 800, // Removed to restore variance
     marginTop: 60,
-    marginBottom: 80,
+    marginBottom: 150, // Balanced to keep pipes higher but allow variance
 };
 
 export const INPUT = {

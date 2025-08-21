@@ -283,9 +283,11 @@ function loop(now) {
                         if (score >= 20 && currentSkinName !== "evo3") {
                             currentSkinName = "evo3";
                             renderer.currentBirdSkin = skins.evo3;
+                            SFX.evolve(); // Play evolution sound
                         } else if (score >= 10 && currentSkinName === "evo1") {
                             currentSkinName = "evo2";
                             renderer.currentBirdSkin = skins.evo2;
+                            SFX.evolve(); // Play evolution sound
                         }
                     }
                 },

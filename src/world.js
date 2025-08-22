@@ -8,6 +8,8 @@ import {
     HITBOX,
     FLAGS,
     PIPE_TUNING,
+    INPUT,
+    PHYSICS,
 } from "./config.js";
 import { aabbOverlap } from "./physics.js";
 
@@ -117,6 +119,59 @@ export class World {
             // Uniform distribution across the allowed range for consistent variability
             centerY = this.rng.nextRange(minCenter, maxCenter);
         }
+
+        // Fairness clamp: ensure vertical transition between consecutive gaps is solvable
+        const last = this.pipes[this.pipes.length - 1];
+        if (last) {
+            const dx = Math.max(0, x - last.x);
+            const speedForScore = SPEED.base * SPEED.ramp(score);
+            const tAvail = dx / Math.max(1e-6, speedForScore);
+
+            const flapInterval = Math.max(
+                INPUT.bufferMs / 1000,
+                1 / PHYSICS.fixedHz
+            );
+            const g = PHYSICS.gravity;
+            const vFlap = PHYSICS.flapVelocity; // negative (up)
+            const vTerm = PHYSICS.terminalVelocity;
+
+            function maxUpwardReach(seconds) {
+                let remaining = seconds;
+                let totalDy = 0; // positive = down, negative = up
+                while (remaining > 1e-6) {
+                    const dtSeg = Math.min(remaining, flapInterval);
+                    // Displacement with reset initial velocity each flap
+                    totalDy += vFlap * dtSeg + 0.5 * g * dtSeg * dtSeg;
+                    remaining -= dtSeg;
+                }
+                // Return positive upward capacity in pixels
+                return Math.max(0, -totalDy);
+            }
+
+            function maxDownwardReach(seconds) {
+                const tToTerm = vTerm / g;
+                if (seconds <= tToTerm) {
+                    return 0.5 * g * seconds * seconds;
+                }
+                const distToTerm = 0.5 * g * tToTerm * tToTerm;
+                return distToTerm + vTerm * (seconds - tToTerm);
+            }
+
+            const upCap = maxUpwardReach(tAvail);
+            const downCap = maxDownwardReach(tAvail);
+
+            const allowedMin = Math.max(minCenter, last.gapCenterY - upCap);
+            const allowedMax = Math.min(maxCenter, last.gapCenterY + downCap);
+
+            if (allowedMin <= allowedMax) {
+                if (centerY < allowedMin) centerY = allowedMin;
+                if (centerY > allowedMax) centerY = allowedMax;
+            } else {
+                // Degenerate case: fall back to closest feasible center around last gap
+                centerY = Math.min(maxCenter, Math.max(minCenter, last.gapCenterY));
+            }
+        }
+
         const pipe = new PipePair(x, centerY, gapSize);
         if (FLAGS.DEBUG_MENU) {
             console.debug(

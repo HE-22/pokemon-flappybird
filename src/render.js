@@ -1,4 +1,11 @@
-import { COLORS, DESIGN_WIDTH, DESIGN_HEIGHT, PIPE, BIRD } from "./config.js";
+import {
+    COLORS,
+    DESIGN_WIDTH,
+    DESIGN_HEIGHT,
+    PIPE,
+    BIRD,
+    FLAGS,
+} from "./config.js";
 
 export class Renderer {
     constructor(canvas) {
@@ -185,16 +192,45 @@ export class Renderer {
     drawPipes(pipes) {
         const g = this.ctx;
         for (const p of pipes) {
-            const { top, bottom } = p.getAABBs();
+            // Draw sprites at visual positions (no hitbox insets)
+            const topHeight = Math.max(0, p.gapCenterY - p.gapSize / 2);
+            const bottomY = p.gapCenterY + p.gapSize / 2;
+            const bottomHeight = Math.max(0, DESIGN_HEIGHT - bottomY);
+
             if (this.pipeSprites?.pipe) {
                 const img = this.pipeSprites.pipe;
-                this._drawPipeTiled(img, bottom.x, bottom.y, bottom.h, false);
-                this._drawPipeTiled(img, top.x, top.y, top.h, true);
+                this._drawPipeTiled(img, p.x, bottomY, bottomHeight, false);
+                this._drawPipeTiled(img, p.x, 0, topHeight, true);
+                // Optional: visualize precise collider path if available
+                if (FLAGS.DEBUG_HITBOX && this.pipeSprites?.pipeCollider) {
+                    const path = this.pipeSprites.pipeCollider;
+                    const scaleX = PIPE.width / img.width;
+                    // Top pipe
+                    if (topHeight > 0) {
+                        this.ctx.save();
+                        this.ctx.translate(p.x, 0);
+                        this.ctx.scale(scaleX, topHeight / img.height);
+                        this.ctx.strokeStyle = "#00ff88";
+                        this.ctx.setLineDash([3, 3]);
+                        this.ctx.stroke(path);
+                        this.ctx.restore();
+                    }
+                    // Bottom pipe
+                    if (bottomHeight > 0) {
+                        this.ctx.save();
+                        this.ctx.translate(p.x, bottomY);
+                        this.ctx.scale(scaleX, bottomHeight / img.height);
+                        this.ctx.strokeStyle = "#00ff88";
+                        this.ctx.setLineDash([3, 3]);
+                        this.ctx.stroke(path);
+                        this.ctx.restore();
+                    }
+                }
             } else {
                 // vector fallback
                 g.fillStyle = this.highContrast ? "#fff" : COLORS.pipe;
-                g.fillRect(top.x - 4, top.y, PIPE.width + 8, top.h);
-                g.fillRect(bottom.x - 4, bottom.y, PIPE.width + 8, bottom.h);
+                g.fillRect(p.x - 4, 0, PIPE.width + 8, topHeight);
+                g.fillRect(p.x - 4, bottomY, PIPE.width + 8, bottomHeight);
             }
         }
     }
@@ -209,5 +245,37 @@ export class Renderer {
         g.textBaseline = "middle";
         g.strokeText(text, DESIGN_WIDTH / 2, y);
         g.fillText(text, DESIGN_WIDTH / 2, y);
+    }
+
+    // Draw hitbox borders for debugging
+    drawHitbox(aabb, color = "#00ff00") {
+        if (!FLAGS.DEBUG_HITBOX) return;
+
+        const g = this.ctx;
+        g.save();
+        g.strokeStyle = color;
+        g.lineWidth = 2;
+        g.setLineDash([5, 5]); // Dashed line for better visibility
+        g.strokeRect(aabb.x, aabb.y, aabb.w, aabb.h);
+        g.restore();
+    }
+
+    // Draw bird hitbox
+    drawBirdHitbox(bird) {
+        if (!FLAGS.DEBUG_HITBOX) return;
+
+        const birdBox = bird.getAABB();
+        this.drawHitbox(birdBox, "#00ff00");
+    }
+
+    // Draw pipe hitboxes
+    drawPipeHitboxes(pipes) {
+        if (!FLAGS.DEBUG_HITBOX) return;
+
+        for (const pipe of pipes) {
+            const { top, bottom } = pipe.getAABBs();
+            this.drawHitbox(top, "#ff0000"); // Red for top pipe
+            this.drawHitbox(bottom, "#ff0000"); // Red for bottom pipe
+        }
     }
 }

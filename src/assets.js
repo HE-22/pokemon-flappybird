@@ -23,7 +23,19 @@ export async function preloadBirdSkins() {
 
 export async function preloadPipes() {
     const pipe = await loadImage("/assets/obs/pipe.png");
-    return { pipe };
+    let pipeCollider = null;
+    try {
+        const { extractColliderPath2D } = await import(
+            "./utils/alphaCollider.js"
+        );
+        pipeCollider = extractColliderPath2D(pipe, {
+            threshold: 10,
+            simplifyEpsilon: 1.2,
+        });
+    } catch (e) {
+        console.debug("[assets] collider extraction skipped:", e?.message || e);
+    }
+    return { pipe, pipeCollider };
 }
 
 export async function preloadBackground() {

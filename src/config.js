@@ -54,7 +54,13 @@ export const BIRD = {
 export const HITBOX = {
     birdInsetX: 10, // shrink width by 10 px total (5 each side)
     birdInsetY: 10, // shrink height by 10 px total
-    pipeInsetX: 8, // shrink pipe collision width to feel fair
+    // Legacy symmetric inset (kept for backward compatibility)
+    pipeInsetX: 28,
+    // Preferred: control each side precisely to avoid lateral offset
+    pipeInsetLeft: 28,
+    pipeInsetRight: 28,
+    // Trim at gap ends to avoid extra height near the caps
+    pipeInsetYGap: 8,
 };
 
 // Optional vertical control for bottom pipe start position and safe margins
@@ -74,6 +80,8 @@ const params = new URLSearchParams(
 );
 export const FLAGS = {
     DEBUG_MENU: params.has("debug") || false,
+    DEBUG_HITBOX: params.has("hitbox") || false, // Show green hitbox borders
+    PRECISE_COLLISION: params.has("precise") || false,
     GHOST_MODE: params.has("ghost") || false, // Zen-like no-fail
     FPS_OVERLAY: params.has("fps") || false,
     PSEUDO_LOC: params.has("pseudo") || false,

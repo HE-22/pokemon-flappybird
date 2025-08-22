@@ -23,18 +23,25 @@ export class PipePair {
         const topHeight = Math.max(0, this.gapCenterY - this.gapSize / 2);
         const bottomY = this.gapCenterY + this.gapSize / 2;
         const bottomHeight = Math.max(0, DESIGN_HEIGHT - bottomY);
+        const insetLeft =
+            HITBOX.pipeInsetLeft ?? (HITBOX.pipeInsetX ?? 0) * 0.5;
+        const insetRight =
+            HITBOX.pipeInsetRight ?? (HITBOX.pipeInsetX ?? 0) * 0.5;
+        const insetYGap = HITBOX.pipeInsetYGap ?? 0;
+        const hitboxX = this.x + insetLeft;
+        const hitboxW = Math.max(0, PIPE.width - insetLeft - insetRight);
         return {
             top: {
-                x: this.x + HITBOX.pipeInsetX * 0.5,
+                x: hitboxX,
                 y: 0,
-                w: PIPE.width - HITBOX.pipeInsetX,
-                h: topHeight,
+                w: hitboxW,
+                h: Math.max(0, topHeight - insetYGap),
             },
             bottom: {
-                x: this.x + HITBOX.pipeInsetX * 0.5,
-                y: bottomY,
-                w: PIPE.width - HITBOX.pipeInsetX,
-                h: bottomHeight,
+                x: hitboxX,
+                y: bottomY + insetYGap,
+                w: hitboxW,
+                h: Math.max(0, bottomHeight - insetYGap),
             },
         };
     }

@@ -345,6 +345,10 @@ function loop(now) {
         renderer.drawPipes(world.pipes);
         renderer.drawBird(bird, animT);
         renderer.drawGround();
+
+        // Draw hitboxes in debug mode
+        renderer.drawBirdHitbox(bird);
+        renderer.drawPipeHitboxes(world.pipes);
     }
 
     requestAnimationFrame(loop);

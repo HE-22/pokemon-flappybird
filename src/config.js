@@ -25,16 +25,16 @@ export const SPEED = {
 // Pipe and difficulty tuning
 export const DIFFICULTY = {
     // Start easier and wider, shrink slowly
-    initialGap: 240,
-    minGapByScore: 160, // target by difficultyTargetScore
+    initialGap: 200,
+    minGapByScore: 120, // target by difficultyTargetScore
     difficultyTargetScore: 70,
     gapAtScore(score, birdHeight) {
         // Ease-in (quadratic): small change early, ramps later
         const t = Math.min(1, Math.max(0, score / this.difficultyTargetScore));
         const eased = t * t;
         const raw = (1 - eased) * this.initialGap + eased * this.minGapByScore;
-        // Guarantee fair gap: never below birdHeight * 3.5
-        const fairMin = birdHeight * 3.5;
+        // Guarantee fair gap: never below birdHeight * 2.5
+        const fairMin = birdHeight * 2.5;
         return Math.max(raw, fairMin);
     },
     spacing: 340,

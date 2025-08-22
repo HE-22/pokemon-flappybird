@@ -114,25 +114,8 @@ export class World {
             );
             centerY = bottomY - gapSize / 2;
         } else {
-            // Add more variation with weighted random distribution
-            const range = maxCenter - minCenter;
-            const third = range / 3;
-
-            // 40% chance for middle third (easier), 30% each for top/bottom thirds (harder)
-            const rand = this.rng.nextRange(0, 1);
-            if (rand < 0.4) {
-                // Middle third - easier
-                centerY = this.rng.nextRange(
-                    minCenter + third,
-                    maxCenter - third
-                );
-            } else if (rand < 0.7) {
-                // Top third - harder
-                centerY = this.rng.nextRange(minCenter, minCenter + third);
-            } else {
-                // Bottom third - harder
-                centerY = this.rng.nextRange(maxCenter - third, maxCenter);
-            }
+            // Uniform distribution across the allowed range for consistent variability
+            centerY = this.rng.nextRange(minCenter, maxCenter);
         }
         const pipe = new PipePair(x, centerY, gapSize);
         if (FLAGS.DEBUG_MENU) {

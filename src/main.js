@@ -205,7 +205,13 @@ window.addEventListener("pointerdown", (e) => {
     bufferInput();
 });
 window.addEventListener("keydown", (e) => {
-    if (e.code === "Space") bufferInput();
+    if (e.code === "Space") {
+        if (state === State.GameOver) {
+            startRun();
+        } else {
+            bufferInput();
+        }
+    }
     if (e.code === "ArrowUp") arrowUpHeld = true;
     if (e.code === "ArrowDown") arrowDownHeld = true;
     if (e.code === "ArrowRight" || e.code === "KeyJ") bufferDashInput();
@@ -339,8 +345,8 @@ function loop(now) {
                     score += 1;
                     ui.hudScore.textContent = String(score);
                     SFX.pass();
-                    // Skin upgrades at 10 and 20
-                    if (skins) {
+                    // Skin upgrades at 10 and 20 (disabled in hard mode)
+                    if (skins && !FLAGS.HARD_MODE) {
                         if (score >= 20 && currentSkinName !== "evo3") {
                             currentSkinName = "evo3";
                             renderer.currentBirdSkin = skins.evo3;

@@ -6,17 +6,6 @@
             content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
         <meta name="theme-color" content="#111111">
         <title>Flappy Bird</title>
-        <script>
-      // Redirect /hardmode/ to /hardmode (normalize) for pathname check
-      (function(){
-        try {
-          var p = location.pathname;
-          if (p.length > 1 && p.endsWith('/')) {
-            history.replaceState(null, '', p.replace(/\/+$/, ''));
-          }
-        } catch(e) {}
-      })();
-    </script>
         <style>
       @font-face { font-family: 'PokemonClassic'; src: url('/assets/fonts/PokemonClassic.ttf') format('truetype'); font-display: swap; }
       html, body { height: 100%; margin: 0; background: #0f172a; color: #e5e7eb; font-family: 'PokemonClassic', monospace; }
@@ -103,6 +92,6 @@
             <div class="fps" id="fpsOverlay" style="display:none">FPS: 60</div>
         </div>
 
-        <script type="module" src="./src/main.js"></script>
+        <script type="module" src="/src/main.js"></script>
     </body>
 </html>

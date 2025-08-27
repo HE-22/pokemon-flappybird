@@ -4,7 +4,6 @@ export class Bird {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.vx = 0;
         this.vy = 0;
         this.width = BIRD.width;
         this.height = BIRD.height;
@@ -13,6 +12,13 @@ export class Bird {
 
     flap() {
         this.vy = PHYSICS.flapVelocity;
+    }
+
+    reset(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vy = 0;
+        this.alive = true;
     }
 
     step(dt) {

@@ -235,6 +235,8 @@ export class Renderer {
         }
     }
 
+    // removed dash HUD
+
     drawCenteredText(text, y, size = 48) {
         const g = this.ctx;
         g.fillStyle = this.highContrast ? "#fff" : "#ffffff";

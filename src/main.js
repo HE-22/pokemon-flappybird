@@ -139,10 +139,20 @@ let bird = null;
 let score = 0;
 let inputBuffered = false;
 let lastInputTime = -1;
+let dashInputBuffered = false;
+let lastDashInputTime = -1;
+let isDashing = false;
+let dashTimer = 0;
+let dashCooldownTimer = 0;
 let lastFrameTime = performance.now();
 let accumulator = 0;
 const fixedDt = 1 / PHYSICS.fixedHz;
 let animT = 0; // for wing animation
+
+// Arrow hold flags and teleport speed
+let arrowUpHeld = false;
+let arrowDownHeld = false;
+const TELEPORT_SPEED = 480; // px/s vertical move while holding arrows
 
 function setState(next) {
     state = next;
@@ -157,7 +167,8 @@ function newRun(newSeed) {
     world = new World(rng);
     world.reset();
     const startY = DESIGN_HEIGHT * 0.45;
-    bird = new Bird(DESIGN_WIDTH * 0.28, startY);
+    const startX = DESIGN_WIDTH * 0.28;
+    bird = new Bird(startX, startY);
     score = 0;
     ui.hudScore.textContent = "0";
     accumulator = 0;
@@ -183,12 +194,25 @@ function bufferInput() {
     SFX.ui();
 }
 
+function bufferDashInput() {
+    dashInputBuffered = true;
+    lastDashInputTime = performance.now();
+    resumeAudio();
+}
+
 window.addEventListener("pointerdown", (e) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     bufferInput();
 });
 window.addEventListener("keydown", (e) => {
-    if (e.code === "Space" || e.code === "ArrowUp") bufferInput();
+    if (e.code === "Space") bufferInput();
+    if (e.code === "ArrowUp") arrowUpHeld = true;
+    if (e.code === "ArrowDown") arrowDownHeld = true;
+    if (e.code === "ArrowRight" || e.code === "KeyJ") bufferDashInput();
+});
+window.addEventListener("keyup", (e) => {
+    if (e.code === "ArrowUp") arrowUpHeld = false;
+    if (e.code === "ArrowDown") arrowDownHeld = false;
 });
 
 ui.btnPlay.addEventListener("click", () => {
@@ -268,9 +292,46 @@ function loop(now) {
             }
             inputBuffered = false;
 
+            // Process dash input for speed boost
+            if (
+                dashInputBuffered &&
+                performance.now() - lastDashInputTime <= INPUT.bufferMs
+            ) {
+                if (dashCooldownTimer <= 0 && !isDashing) {
+                    isDashing = true;
+                    dashTimer = PHYSICS.dashDuration;
+                    dashCooldownTimer = PHYSICS.dashCooldown;
+                    SFX.flap();
+                    tapLight();
+                }
+            }
+            dashInputBuffered = false;
+
+            // Update dash timers
+            if (dashCooldownTimer > 0) dashCooldownTimer -= fixedDt;
+            if (isDashing) {
+                dashTimer -= fixedDt;
+                if (dashTimer <= 0) isDashing = false;
+            }
+
+            // Apply hold-based vertical teleport (direct vertical movement)
+            if (state === State.Run && bird) {
+                if (arrowUpHeld && !arrowDownHeld) {
+                    bird.y = Math.max(1, bird.y - TELEPORT_SPEED * fixedDt);
+                    bird.vy = 0;
+                } else if (arrowDownHeld && !arrowUpHeld) {
+                    bird.y = Math.min(
+                        GROUND_LEVEL - bird.height - 1,
+                        bird.y + TELEPORT_SPEED * fixedDt
+                    );
+                    bird.vy = 0;
+                }
+            }
+
             bird.step(fixedDt);
             world.spawnIfNeeded(bird.height);
-            world.step(fixedDt, score);
+            const speedScale = isDashing ? SPEED.dashMultiplier : 1;
+            world.step(fixedDt, score, speedScale);
 
             const hit = world.checkScoreAndCollisions(
                 bird,
@@ -323,8 +384,9 @@ function loop(now) {
 
     // Update background scroll offset during gameplay
     if (state === State.Run) {
-        const gameSpeed = SPEED.base * SPEED.ramp(score);
-        backgroundScrollOffset += gameSpeed * fixedDt; // Scroll at game speed
+        const speedScale = isDashing ? SPEED.dashMultiplier : 1;
+        const gameSpeed = SPEED.base * SPEED.ramp(score) * speedScale;
+        backgroundScrollOffset += gameSpeed * dt; // Use real dt for smoothness
     } else if (state === State.Title) {
         backgroundScrollOffset += SPEED.base * 0.3 * fixedDt; // Slower scroll during title screen
     }

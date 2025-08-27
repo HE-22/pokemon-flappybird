@@ -196,8 +196,9 @@ export class World {
         return pipe;
     }
 
-    step(dt, score) {
-        this.speed = SPEED.base * SPEED.ramp(score);
+    step(dt, score, speedScale = 1) {
+        // speedScale allows temporary boosts (dash)
+        this.speed = SPEED.base * SPEED.ramp(score) * Math.max(0, speedScale);
         for (const pipe of this.pipes) {
             pipe.x -= this.speed * dt;
         }

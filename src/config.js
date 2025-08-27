@@ -10,34 +10,44 @@ export const PHYSICS = {
     gravity: 1200, // units/s^2 downward
     flapVelocity: -280, // units/s upward (negative y = up)
     terminalVelocity: 900, // units/s down cap
+    // Dash timings used by game loop (speed multiplier based dash)
+    dashDuration: 0.15, // seconds dash lasts
+    dashCooldown: 2.0, // seconds between dashes
 };
+
+// Determine hard mode from URL path
+const pathName =
+    typeof window !== "undefined" ? window.location.pathname || "" : "";
+export const HARD_MODE = pathName.replace(/\/+$/, "") === "/hardmode";
 
 // World scroll speed
 export const SPEED = {
-    base: 120, // units/s
+    base: HARD_MODE ? 220 : 120, // units/s
     ramp(score) {
-        if (score >= 30) return 1.1;
-        if (score >= 15) return 1.05;
+        if (score >= 30) return HARD_MODE ? 1.2 : 1.1;
+        if (score >= 15) return HARD_MODE ? 1.1 : 1.05;
         return 1.0;
     },
+    dashMultiplier: 2.0, // speed multiplier while dashing
 };
 
 // Pipe and difficulty tuning
 export const DIFFICULTY = {
-    // Start with smaller gap and get even smaller
-    initialGap: 120, // Much smaller starting gap
-    minGapByScore: 80, // Even smaller minimum gap
-    difficultyTargetScore: 30, // reach minimum gap sooner
+    // Start with small gap and get even smaller in hard mode
+    initialGap: HARD_MODE ? 100 : 120,
+    minGapByScore: HARD_MODE ? 70 : 80,
+    difficultyTargetScore: HARD_MODE ? 20 : 30,
     gapAtScore(score, birdHeight) {
         // Steep progression from small to tiny
         const t = Math.min(1, Math.max(0, score / this.difficultyTargetScore));
         const eased = t * t * t; // cubic easing for steep curve
         const raw = (1 - eased) * this.initialGap + eased * this.minGapByScore;
-        // Guarantee fair gap: never below birdHeight * 2.0 (more aggressive)
-        const fairMin = birdHeight * 2.0;
+        // Guarantee fair gap: never below birdHeight * factor
+        const fairMinFactor = HARD_MODE ? 1.6 : 2.0;
+        const fairMin = birdHeight * fairMinFactor;
         return Math.max(raw, fairMin);
     },
-    spacing: 340,
+    spacing: HARD_MODE ? 300 : 340,
     spacingJitter: 6, // ±6 for more consistent posts
 };
 
@@ -85,6 +95,7 @@ export const FLAGS = {
     GHOST_MODE: params.has("ghost") || false, // Zen-like no-fail
     FPS_OVERLAY: params.has("fps") || false,
     PSEUDO_LOC: params.has("pseudo") || false,
+    HARD_MODE,
 };
 
 export const COLORS = {
